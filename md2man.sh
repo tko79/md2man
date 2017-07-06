@@ -26,5 +26,38 @@ or (at your option) any later version.
 EOF
 )
 
+filename=$1
+outfile=${filename%".md"}".1"
+
 echo -e "$license"
 echo -e ""
+
+# checking if first parameter is a valid file (expecting markdown file with suffix .md)
+
+echo -n "checking if first parameter is a valid file (expecting markdown file with suffix .md) ..."
+if [ ! -e $filename ]; then
+    echo " file not found!"
+    exit 1
+fi
+echo " done."
+
+# reading header info (header format (e.g. title): [//]: # (title:<title>) )
+
+echo -n "reading header info ..."
+#
+title=$(grep "\[\/\/\]: # (title:" $filename | awk -F: '{ print $3 }' | awk -F')' '{ print $1 }')
+section=$(grep "\[\/\/\]: # (section:" $filename | awk -F: '{ print $3 }' | awk -F')' '{ print $1 }')
+description=$(grep "\[\/\/\]: # (description:" $filename | awk -F: '{ print $3 }' | awk -F')' '{ print $1 }')
+echo " done."
+
+echo ""
+echo "title:\""$title"\""
+echo "section:\""$section"\""
+echo "description:\""$description"\""
+echo ""
+
+# executing pandoc to convert markdown to man page
+
+echo -n "executing pandoc to convert markdown to man page ..."
+pandoc --variable=title:$title --variable=section:$section --variable=date:$(date "+%Y-%m-%d") --variable=description:$description --standalone -t man -o $outfile $filename
+echo " done."
